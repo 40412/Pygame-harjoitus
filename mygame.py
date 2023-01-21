@@ -1,7 +1,7 @@
 import pygame
 import sys     # sys-module will be needed to exit the game
 from pygame.locals import * # imports the constants of pygame
-import Platform
+import ScreenObject
 
 pygame.init()  # initializes pygame
 
@@ -29,41 +29,29 @@ blue = (0,0,255)
 pink = (255,0,130)
 transp = (0,0,0,0)
 
+#Different groups to handle sprites
+platfgroup = pygame.sprite.Group()
+mario_group = pygame.sprite.Group()
+moving_group = pygame.sprite.Group()
+
 # Surface objects can be added to the display surface with blit() method
 # blit(Surface,(x,y)) adds "Surface" into coordinates (x,y)=(left, top)
 dispSurf.blit(level, (0,0))
 
-rectangle = Platform.Platform(960, 50, 0, 537, transp)
-platfgroup = pygame.sprite.Group()
+rectangle = ScreenObject.Platform(width, 50, 0, 537, transp)
 platfgroup.add(rectangle)
-platform = Platform.Platform(220, 5, 460, 365, transp)
+platform = ScreenObject.Platform(220, 5, 460, 365, transp)
 platfgroup.add(platform)
-
-class Mario(pygame.sprite.Sprite):
-    def __init__(self, picture_path):
-        super().__init__()
-        self.image = pygame.image.load(picture_path)
-        self.rect = self.image.get_rect()
-        self.rect.left = 100
-        self.rect.top = 250
-
-class MovingSprite(pygame.sprite.Sprite):
-    def __init__(self,picture_path):
-        super().__init__()
-        self.image = pygame.image.load(picture_path)
-        self.rect = self.image.get_rect()
+pipe = ScreenObject.Platform(80, 150, 810, height - 150, green)
+platfgroup.add(pipe)
+mario = ScreenObject.Mario("mario.png")
+mario_group.add(mario)
+fireball = ScreenObject.MovingSprite("fireball.png")
+moving_group.add(fireball)
 
 # the display surface needs to be updated for the blitted Surfaces to become visible
 # pygame.display.update() would do the same
 pygame.display.flip()
-
-mario = Mario("mario.png")
-mario_group = pygame.sprite.Group()
-mario_group.add(mario)
-
-fireball = MovingSprite("fireball.png")
-moving_group = pygame.sprite.Group()
-moving_group.add(fireball)
 
 # character physics
 def fall():
@@ -71,6 +59,7 @@ def fall():
         mario.rect.top += 1
         
 isJump = False
+controls = False
 speedx = 1
 speedy = 20
 jumpmax = 10
@@ -106,9 +95,9 @@ while True:
 
     # get.pressed() function gives a boolean list of all the keys if they are being pressed
     pressings = pygame.key.get_pressed()
-    if pressings[K_a]:          # if left-key is true in the list
+    if pressings[K_a] and controls == True:          # if left-key is true in the list
         mario.rect.move_ip((-1,0))  # mario will be moved one pixel left
-    if pressings[K_d]:
+    if pressings[K_d] and controls:
         mario.rect.move_ip((1,0))
       
     if isJump == False and pygame.sprite.spritecollideany(mario, platfgroup) and pressings[K_SPACE]:
@@ -122,6 +111,14 @@ while True:
             jumpmax = 10
 
     fall()
+
+    if pygame.sprite.spritecollideany(pipe, mario_group):
+        controls = False
+        mario.rect.centerx = pipe.rect.centerx
+        mario.rect.top += 1
+        if mario.rect.center[1] > height:
+            mario.rect.center = 100, 0
+    else: controls = True
 
     # blit all the Surfaces in their new places
     dispSurf.blit(level, (0,0)) # without this, moving characters would have a "trace"
