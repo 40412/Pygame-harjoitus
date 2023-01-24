@@ -1,8 +1,8 @@
-import pygame
-import sys     # sys-module will be needed to exit the game
+import pygame, ScreenObject, sys
 from pygame.locals import * # imports the constants of pygame
-import ScreenObject
+from ScreenObject import *
 import random as r
+from math import *
 
 pygame.init()  # initializes pygame
 
@@ -94,6 +94,12 @@ def map_edges():
         mario.rect.centerx = 0
     if mario.rect.centerx < 0:
         mario.rect.centerx = width
+
+def get_angle(point2, point1):
+        dx = point2[0] - point1[0]
+        dy = point2[1] - point1[1]
+        angle = atan2(dy, dx)
+        return angle
         
 isJump = False
 controls = False
@@ -110,10 +116,12 @@ gameovertext = gameoverfont.render('GAME OVER', True, red)
 speed = [r.randint(0,1),1]
 
 update_hearts()
+pygame.mouse.set_visible(False)
+
+bullets = []
 
 # the game loop which runs until sys.exit()
 while True:
-    pygame.mouse.set_visible(False)
     # loop to check if the user has closed the display window or pressed esc
     for event in pygame.event.get():  # list of all the events in the event queue
         if event.type == pygame.QUIT: # if the player closed the window
@@ -156,6 +164,11 @@ while True:
     if pressings[K_d] and controls:
         mario.rect.move_ip((speedx,0))
         x_direct_right = True
+
+    #Shooting bullets if mousebutton is clicked
+    if event.type == MOUSEBUTTONDOWN:
+        bullet = ScreenObject.Bullet(mario.rect.center, get_angle(pygame.mouse.get_pos(), mario.rect.center))
+        bullets.append(bullet)
       
     if isJump == False and pygame.sprite.spritecollideany(mario, platfgroup) and pressings[K_SPACE]:
         isJump = True
@@ -195,7 +208,12 @@ while True:
 
     # blit all the Surfaces in their new places
     dispSurf.blit(level, (0,0)) # without this, moving characters would have a "trace"
+    for bullet in bullets:
+        bullet.draw_bullet(dispSurf)
+        bullet.update()
     moving_group.draw(dispSurf)
+    #bullet_group.draw(dispSurf)
+    #bullet_group.update()
     mario_group.draw(dispSurf)
     platfgroup.draw(dispSurf)
     headcollision_group.draw(dispSurf)
