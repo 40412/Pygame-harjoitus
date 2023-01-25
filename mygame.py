@@ -14,7 +14,7 @@ dispSurf = pygame.display.set_mode((width,height))
 pygame.display.set_caption("My game")
 
 # the Surface objects
-level = pygame.image.load("level.jpg").convert()
+level = pygame.image.load("level.png").convert()
 # pygame.image.load(file) function loads a picture "file" into a given variable
 # convert() method converts the picture into the right pixel-format
 # picture files needs to be in the same folder as this python file
