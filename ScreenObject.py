@@ -37,8 +37,16 @@ class MovingSprite(pygame.sprite.Sprite):
 
     def update(self):
         self.image.set_alpha(0)
-        self.rect.center = (r.randint(100,800), 100)
+        self.rect.center = (r.randint(100,800), 50)
         self.image.set_alpha(255)
+
+    def koopa_move(self):
+        self.rect.centerx += 1
+        if self.rect.centerx > 2500:
+            self.rect.centerx = 0
+
+    def spiny_move(self, x):
+        pass
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, pos, angle, picture_path):

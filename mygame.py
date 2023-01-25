@@ -38,6 +38,8 @@ moving_group = pygame.sprite.Group()
 headcollision_group = pygame.sprite.Group()
 sidecollision_group = pygame.sprite.Group()
 heart_group = pygame.sprite.Group()
+koopa_group = pygame.sprite.Group()
+spiny_group = pygame.sprite.Group()
 
 # Surface objects can be added to the display surface with blit() method
 # blit(Surface,(x,y)) adds "Surface" into coordinates (x,y)=(left, top)
@@ -74,7 +76,12 @@ sidecollision_group.add(qmarkbox2side)
 tilesside = ScreenObject.Platform(220, 25, 460, 370, transp)
 sidecollision_group.add(tilesside)
 crosshair = pygame.draw.circle(dispSurf, white, pygame.mouse.get_pos(), 3, 2)
-
+koopa = ScreenObject.MovingSprite('parakoopa.png', 0, 200)
+moving_group.add(koopa)
+koopa_group.add(koopa)
+spiny = ScreenObject.MovingSprite('spiny.png', 600, height - 90)
+moving_group.add(spiny)
+spiny_group.add(spiny)
 # If mario touches the fireball, he loses health.
 # This function empties the heart_group and checks the current health situation and updates the group
 def update_hearts():
@@ -104,7 +111,6 @@ speed = [r.randint(0,1),1]
 
 update_hearts()
 pygame.mouse.set_visible(False)
-
 bullets = []
 
 # the game loop which runs until sys.exit()
@@ -128,8 +134,13 @@ while True:
         pygame.display.update()
         pygame.time.wait(5000)
         sys.exit()
+
     fun.fireball_movement(fireball, width, height, speed, platfgroup, mario_group)
     fun.fb_collision(fireball, platfgroup, mario_group, speed)
+    koopa.koopa_move()
+    fun.kill_koopa(bullets, koopa, koopa_group)
+    spiny.spiny_move(700)
+    fun.kill_spiny(bullets, spiny, spiny_group)
     
     pressings = pygame.key.get_pressed()
     fun.key_pressings(mario, controls, speedx, x_direct_right)
@@ -157,6 +168,7 @@ while True:
     fun.map_edges(mario, width)
     fun.collisions(mario, sidecollision_group, controls, speedx, x_direct_right)
     fun.pipejump(pipetop, mario_group, mario, pipe, height, controls)
+
     # Draw all the Surfaces
     dispSurf.blit(level, (0,0)) # without this, moving characters would have a "trace"
     for bullet in bullets:
