@@ -41,18 +41,21 @@ class MovingSprite(pygame.sprite.Sprite):
         self.image.set_alpha(255)
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, pos, angle):
+    def __init__(self, pos, angle, picture_path):
         super().__init__()
-        #self.image = pygame.Surface((2, 2))
-        #self.rect = self.image.get_rect()
+        self.image = pygame.image.load(picture_path).convert_alpha()
+        self.rect = self.image.get_rect()
         self.x = pos[0]
         self.y = pos[1]
+        self.rect.center = (self.x, self.y)
         self.angle = angle
         self.speed = 2
 
     def update(self):
         self.x += cos(self.angle) * self.speed
         self.y += sin(self.angle) * self.speed
+        self.rect.center = (self.x, self.y)
 
     def draw_bullet(self, screen):
-        pygame.draw.rect(screen, (240,0,0), pygame.Rect(self.x, self.y, 10, 10))
+        screen.blit(self.image, self.rect)
+        # pygame.draw.rect(screen, (240,0,0), pygame.Rect(self.x, self.y, 10, 10))

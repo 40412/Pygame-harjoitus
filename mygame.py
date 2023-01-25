@@ -136,7 +136,7 @@ while True:
 
     #Shooting bullets if mousebutton is clicked
     if event.type == MOUSEBUTTONDOWN:
-        bullet = ScreenObject.Bullet(mario.rect.center, fun.get_angle(pygame.mouse.get_pos(), mario.rect.center))
+        bullet = ScreenObject.Bullet(mario.rect.center, fun.get_angle(pygame.mouse.get_pos(), mario.rect.center), "bullet.png")
         bullets.append(bullet)
       
     if isJump == False and pygame.sprite.spritecollideany(mario, platfgroup) and pressings[K_SPACE]:
