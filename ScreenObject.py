@@ -55,4 +55,4 @@ class Bullet(pygame.sprite.Sprite):
         self.y += sin(self.angle) * self.speed
 
     def draw_bullet(self, screen):
-        pygame.draw.rect(screen, (255,255,255), pygame.Rect(self.x, self.y, 10, 10))
+        pygame.draw.rect(screen, (240,0,0), pygame.Rect(self.x, self.y, 10, 10))

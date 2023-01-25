@@ -3,6 +3,7 @@ from pygame.locals import * # imports the constants of pygame
 from ScreenObject import *
 import random as r
 from math import *
+import functionality as fun
 
 pygame.init()  # initializes pygame
 
@@ -42,6 +43,7 @@ heart_group = pygame.sprite.Group()
 # blit(Surface,(x,y)) adds "Surface" into coordinates (x,y)=(left, top)
 dispSurf.blit(level, (0,0))
 
+#Sprites
 rectangle = ScreenObject.Platform(width, 50, 0, 537, transp)
 platfgroup.add(rectangle)
 platform = ScreenObject.Platform(220, 5, 460, 365, transp)
@@ -73,6 +75,8 @@ tilesside = ScreenObject.Platform(220, 25, 460, 370, transp)
 sidecollision_group.add(tilesside)
 crosshair = pygame.draw.circle(dispSurf, white, pygame.mouse.get_pos(), 3, 2)
 
+# If mario touches the fireball, he loses health.
+# This function empties the heart_group and checks the current health situation and updates the group
 def update_hearts():
     heart_group.empty()
     heartpos = 50
@@ -84,25 +88,8 @@ def update_hearts():
 # pygame.display.update() would do the same
 pygame.display.flip()
 
-# character physics
-def fall():
-    if not pygame.sprite.spritecollideany(mario, platfgroup) and not isJump:
-        mario.rect.top += 2
-
-def map_edges():
-    if mario.rect.centerx > width:
-        mario.rect.centerx = 0
-    if mario.rect.centerx < 0:
-        mario.rect.centerx = width
-
-def get_angle(point2, point1):
-        dx = point2[0] - point1[0]
-        dy = point2[1] - point1[1]
-        angle = atan2(dy, dx)
-        return angle
-        
 isJump = False
-controls = False
+controls = True
 speedx = 2
 speedy = 10
 x_direct_right = False
@@ -131,15 +118,7 @@ while True:
             if event.key == K_ESCAPE: # if the key was esc
                 pygame.quit() # the display window closes
                 sys.exit()    # the python program exits
-    # fireball will be moved by speed=[1,1] in every iteration
-    # move_ip([x,y]) changes the Rect-objects left-top coordinates by x and y
-    fireball.rect.move_ip(speed)
-    # fireball bounces from the edges of the display surface
-    if fireball.rect.left < 0 or fireball.rect.right > width: # fireball is vertically outside the game
-        speed[0] = -speed[0] # the x-direction of the speed will be converted
-    if fireball.rect.top < 0 or fireball.rect.bottom > height: # fireball is horizontally outside the game
-        speed[1] = -speed[1] # the y-direction of the speed will be converted
-
+    
     if pygame.sprite.spritecollideany(fireball, mario_group):
         mario.update()
         update_hearts()
@@ -149,25 +128,15 @@ while True:
         pygame.display.update()
         pygame.time.wait(5000)
         sys.exit()
-
-    # Fireball disappears after hitting the ground or platform
-    if pygame.sprite.spritecollideany(fireball, platfgroup) or pygame.sprite.spritecollideany(fireball, mario_group):
-        boom.play()
-        fireball.update()
-        speed[0] = r.randint(-1,1)
-
-    # get.pressed() function gives a boolean list of all the keys if they are being pressed
+    fun.fireball_movement(fireball, width, height, speed, platfgroup, mario_group)
+    fun.fb_collision(fireball, platfgroup, mario_group, speed)
+    
     pressings = pygame.key.get_pressed()
-    if pressings[K_a] and controls:          # if left-key is true in the list
-        mario.rect.move_ip((-1 * speedx,0))  # mario will be moved one pixel left
-        x_direct_right = False
-    if pressings[K_d] and controls:
-        mario.rect.move_ip((speedx,0))
-        x_direct_right = True
+    fun.key_pressings(mario, controls, speedx, x_direct_right)
 
     #Shooting bullets if mousebutton is clicked
     if event.type == MOUSEBUTTONDOWN:
-        bullet = ScreenObject.Bullet(mario.rect.center, get_angle(pygame.mouse.get_pos(), mario.rect.center))
+        bullet = ScreenObject.Bullet(mario.rect.center, fun.get_angle(pygame.mouse.get_pos(), mario.rect.center))
         bullets.append(bullet)
       
     if isJump == False and pygame.sprite.spritecollideany(mario, platfgroup) and pressings[K_SPACE]:
@@ -184,36 +153,16 @@ while True:
                 isJump = False
                 jumpmax = 25
         speedy = 10
-
-    fall()
-    map_edges()
-
-    if pygame.sprite.spritecollideany(mario, sidecollision_group):
-        speedx = 0
-        if x_direct_right == True:
-            mario.rect.move_ip(-5,0)
-        if x_direct_right == False:
-            mario.rect.move_ip(5,0)
-    else:
-        speedx = 2
-
-    #if mario touches the top of the pipe, he jumps inside it
-    if pygame.sprite.spritecollideany(pipetop, mario_group):
-        controls = False
-        mario.rect.centerx = pipe.rect.centerx
-        mario.rect.top += 1
-        if mario.rect.center[1] > height-110:
-            mario.rect.center = 100, 0
-    else: controls = True
-
-    # blit all the Surfaces in their new places
+    fun.fall(mario, platfgroup, isJump)
+    fun.map_edges(mario, width)
+    fun.collisions(mario, sidecollision_group, controls, speedx, x_direct_right)
+    fun.pipejump(pipetop, mario_group, mario, pipe, height, controls)
+    # Draw all the Surfaces
     dispSurf.blit(level, (0,0)) # without this, moving characters would have a "trace"
     for bullet in bullets:
         bullet.draw_bullet(dispSurf)
         bullet.update()
     moving_group.draw(dispSurf)
-    #bullet_group.draw(dispSurf)
-    #bullet_group.update()
     mario_group.draw(dispSurf)
     platfgroup.draw(dispSurf)
     headcollision_group.draw(dispSurf)
