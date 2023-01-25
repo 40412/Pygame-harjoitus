@@ -34,6 +34,8 @@ class MovingSprite(pygame.sprite.Sprite):
         self.image = pygame.image.load(picture_path).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = x_pos, y_pos
+        self.random_movement_speed = 1
+        self.random_reset_pos = r.randint(1200, 2500)
 
     def update(self):
         self.image.set_alpha(0)
@@ -41,16 +43,23 @@ class MovingSprite(pygame.sprite.Sprite):
         self.image.set_alpha(255)
 
     def koopa_move(self):
-        self.rect.centerx += 1
-        if self.rect.centerx > r.randint(1500, 2500):
+        self.rect.centerx += self.random_movement_speed
+        if self.rect.centerx > self.random_reset_pos:
             self.rect.centerx = 0
+            self.random_movement_speed = r.randint(1,2)
+            self.random_reset_pos = r.randint(1200, 2500)
+            self.rect.centery = r.randint(150, 400)
 
     def spiny_move(self, x):
-        pass
+        self.rect.centerx += r.randint(0,1)
+        if self.rect.centerx > self.random_reset_pos:
+            self.random_reset_pos = r.randint(1200, 2500)
+            self.rect.centerx = 0
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, pos, angle, picture_path):
         super().__init__()
+        self.residual = False # True if bullet should die
         self.image = pygame.image.load(picture_path).convert_alpha()
         self.rect = self.image.get_rect()
         self.x = pos[0]
@@ -63,6 +72,10 @@ class Bullet(pygame.sprite.Sprite):
         self.x += cos(self.angle) * self.speed
         self.y += sin(self.angle) * self.speed
         self.rect.center = (self.x, self.y)
+        if self.x > 960 or self.x < 0:
+            self.residual = True
+        if self.y > 600 or self.y < 0:
+            self.residual = True
 
     def draw_bullet(self, screen):
         screen.blit(self.image, self.rect)

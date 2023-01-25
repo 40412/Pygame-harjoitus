@@ -102,7 +102,8 @@ score = 0
 clock = pygame.time.Clock()
 gameoverfont = pygame.font.SysFont('arial', 80)
 gameovertext = gameoverfont.render('GAME OVER', True, red)
-scorefont = pygame.font.SysFont('arial', 80)
+scorefont = pygame.font.SysFont('arial',24)
+finalscorefont = pygame.font.SysFont('arial', 80)
 
 
 boom = pygame.mixer.Sound("boom.wav")
@@ -128,13 +129,13 @@ while True:
                 pygame.quit() # the display window closes
                 sys.exit()    # the python program exits
     
-    if pygame.sprite.spritecollideany(fireball, mario_group):
+    if pygame.sprite.spritecollideany(fireball, mario_group) or pygame.sprite.spritecollideany(koopa, mario_group) or pygame.sprite.spritecollideany(spiny, mario_group):
         mario.update()
         update_hearts()
 
     if mario.isalive == False:
         dispSurf.blit(gameovertext, (300, 250))
-        dispSurf.blit(scorefont.render('Score: ' + str(score), True, (240, 40, 40)), (300, 420))
+        dispSurf.blit(finalscorefont.render('Score: ' + str(score), True, (240, 40, 40)), (300, 420))
         pygame.display.update()
         pygame.time.wait(5000)
         sys.exit()
@@ -142,16 +143,19 @@ while True:
     fun.fireball_movement(fireball, width, height, speed, platfgroup, mario_group)
     fun.fb_collision(fireball, platfgroup, mario_group, speed)
     koopa.koopa_move()
-    fun.kill_koopa(bullets, koopa, koopa_group)
+    kk = fun.kill_koopa(bullets, koopa, koopa_group)
     spiny.spiny_move(700)
-    fun.kill_spiny(bullets, spiny, spiny_group)
+    ks = fun.kill_spiny(bullets, spiny, spiny_group)
+    score = score + kk + ks
+    fun.koopa_hit(koopa, koopa_group, mario_group)
+    fun.spiny_hit(spiny, spiny_group, mario_group)
     
     pressings = pygame.key.get_pressed()
     fun.key_pressings(mario, controls, speedx, x_direct_right)
 
     #Shooting bullets if mousebutton is clicked
     if event.type == MOUSEBUTTONDOWN and bullet_cooldown == 0:
-        bullet_cooldown = 25
+        bullet_cooldown = 20
         bullet = ScreenObject.Bullet(mario.rect.center, fun.get_angle(pygame.mouse.get_pos(), mario.rect.center), "bullet.png")
         bullets.append(bullet)
         gunshot.play()
@@ -181,15 +185,21 @@ while True:
 
     # Draw all the Surfaces
     dispSurf.blit(level, (0,0)) # without this, moving characters would have a "trace"
-    for bullet in bullets:
+
+    for i, bullet in enumerate(bullets): # Update bullets
         bullet.draw_bullet(dispSurf)
         bullet.update()
+        if bullet.residual == True: # Kill off-screen bullets
+            bullets.pop(i)
+    
     moving_group.draw(dispSurf)
     mario_group.draw(dispSurf)
     platfgroup.draw(dispSurf)
     headcollision_group.draw(dispSurf)
     sidecollision_group.draw(dispSurf)
     heart_group.draw(dispSurf)
+    scorewidth, scoreheight = scorefont.size("Score: " + str(score))
+    dispSurf.blit(scorefont.render("Score: " + str(score), True, blue), (width - scorewidth - 10, 32))
     pygame.draw.circle(dispSurf, white, pygame.mouse.get_pos(), 10, 2)
 
     clock.tick(250)

@@ -97,12 +97,25 @@ def fb_collision(fireball, platfgroup, mario_group, speed):
         fireball.update()
         speed[0] = r.randint(-1,1)
 
+def koopa_hit(koopa, koopa_group, mario_group):
+    if pygame.sprite.spritecollideany(koopa, mario_group):
+        koopa.rect.centerx = 1000
+    
+def spiny_hit(spiny, spiny_group, mario_group):
+    if pygame.sprite.spritecollideany(spiny, mario_group):
+        spiny.rect.centerx = 1000
+
 # Bullets kill parakoopa
 def kill_koopa(bullets, koopa, koopa_group):
     for bullet in bullets:
         if pygame.sprite.spritecollideany(bullet, koopa_group):
             points_jingle.play()
             koopa.rect.centerx = 1000   #Koopa moves outside of the screen and keeps moving
+            if koopa.random_movement_speed == 2:
+                return 20
+            else:
+                return 15
+    return 0
 
 #Bullet kills spiny
 def kill_spiny(bullets, spiny, spiny_group):
@@ -111,5 +124,7 @@ def kill_spiny(bullets, spiny, spiny_group):
             spiny.rect.centerx = 1000
             spiny.rect.centerx += 1
             points_jingle.play()
-            if spiny.rect.centerx > 3000:
-                spiny.rect.centerx = 600
+            #if spiny.rect.centerx > 3000:
+            #    spiny.rect.centerx = 600
+            return 10
+    return 0
