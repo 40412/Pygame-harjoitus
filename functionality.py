@@ -3,6 +3,13 @@ from pygame.locals import *
 from math import *
 import random as r
 
+points_jingle = None
+boom = None
+
+boom = pygame.mixer.Sound("boom.wav")
+gunshot = pygame.mixer.Sound("shoot.wav")
+points_jingle = pygame.mixer.Sound("points.wav")
+
 def fall(mario, platfgroup, isJump):
     if not pygame.sprite.spritecollideany(mario, platfgroup) and not isJump:
         mario.rect.top += 2
@@ -86,7 +93,6 @@ def fireball_movement(fireball, width, height, speed, platfgroup, mario_group):
     
 def fb_collision(fireball, platfgroup, mario_group, speed):
     if pygame.sprite.spritecollideany(fireball, platfgroup) or pygame.sprite.spritecollideany(fireball, mario_group):
-        boom = pygame.mixer.Sound("boom.wav")
         boom.play()
         fireball.update()
         speed[0] = r.randint(-1,1)
@@ -95,6 +101,7 @@ def fb_collision(fireball, platfgroup, mario_group, speed):
 def kill_koopa(bullets, koopa, koopa_group):
     for bullet in bullets:
         if pygame.sprite.spritecollideany(bullet, koopa_group):
+            points_jingle.play()
             koopa.rect.centerx = 1000   #Koopa moves outside of the screen and keeps moving
 
 #Bullet kills spiny
@@ -103,5 +110,6 @@ def kill_spiny(bullets, spiny, spiny_group):
         if pygame.sprite.spritecollideany(bullet, spiny_group):
             spiny.rect.centerx = 1000
             spiny.rect.centerx += 1
+            points_jingle.play()
             if spiny.rect.centerx > 3000:
                 spiny.rect.centerx = 600

@@ -3,9 +3,10 @@ from pygame.locals import * # imports the constants of pygame
 from ScreenObject import *
 import random as r
 from math import *
-import functionality as fun
 
 pygame.init()  # initializes pygame
+
+import functionality as fun
 
 # the display surface
 width = 960
@@ -40,10 +41,6 @@ sidecollision_group = pygame.sprite.Group()
 heart_group = pygame.sprite.Group()
 koopa_group = pygame.sprite.Group()
 spiny_group = pygame.sprite.Group()
-
-# Surface objects can be added to the display surface with blit() method
-# blit(Surface,(x,y)) adds "Surface" into coordinates (x,y)=(left, top)
-dispSurf.blit(level, (0,0))
 
 #Sprites
 rectangle = ScreenObject.Platform(width, 50, 0, 537, transp)
@@ -91,20 +88,26 @@ def update_hearts():
         heartpos += 50
         heart = ScreenObject.MovingSprite("heart.png", heartpos, 50)
         heart_group.add(heart)
-# the display surface needs to be updated for the blitted Surfaces to become visible
-# pygame.display.update() would do the same
-pygame.display.flip()
 
+# game variables
+bullet_cooldown = 0
 isJump = False
 controls = True
 speedx = 2
 speedy = 10
 x_direct_right = False
 jumpmax = 25
+score = 0
+
 clock = pygame.time.Clock()
-boom = pygame.mixer.Sound("boom.wav")
 gameoverfont = pygame.font.SysFont('arial', 80)
 gameovertext = gameoverfont.render('GAME OVER', True, red)
+scorefont = pygame.font.SysFont('arial', 80)
+
+
+boom = pygame.mixer.Sound("boom.wav")
+gunshot = pygame.mixer.Sound("shoot.wav")
+points_jingle = pygame.mixer.Sound("points.wav")
 
 # speed contains the [x,y]-speed of the fireball in pixels
 speed = [r.randint(0,1),1]
@@ -131,6 +134,7 @@ while True:
 
     if mario.isalive == False:
         dispSurf.blit(gameovertext, (300, 250))
+        dispSurf.blit(scorefont.render('Score: ' + str(score), True, (240, 40, 40)), (300, 420))
         pygame.display.update()
         pygame.time.wait(5000)
         sys.exit()
@@ -146,9 +150,15 @@ while True:
     fun.key_pressings(mario, controls, speedx, x_direct_right)
 
     #Shooting bullets if mousebutton is clicked
-    if event.type == MOUSEBUTTONDOWN:
+    if event.type == MOUSEBUTTONDOWN and bullet_cooldown == 0:
+        bullet_cooldown = 25
         bullet = ScreenObject.Bullet(mario.rect.center, fun.get_angle(pygame.mouse.get_pos(), mario.rect.center), "bullet.png")
         bullets.append(bullet)
+        gunshot.play()
+    
+    #Bullet cooldown
+    if bullet_cooldown > 0:
+        bullet_cooldown = bullet_cooldown-1
       
     if isJump == False and pygame.sprite.spritecollideany(mario, platfgroup) and pressings[K_SPACE]:
         isJump = True

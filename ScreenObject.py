@@ -42,7 +42,7 @@ class MovingSprite(pygame.sprite.Sprite):
 
     def koopa_move(self):
         self.rect.centerx += 1
-        if self.rect.centerx > 2500:
+        if self.rect.centerx > r.randint(1500, 2500):
             self.rect.centerx = 0
 
     def spiny_move(self, x):
