@@ -35,7 +35,7 @@ class MovingSprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = x_pos, y_pos
         self.random_movement_speed = 1
-        self.random_reset_pos = r.randint(1200, 2500)
+        self.random_reset_pos = r.randint(1000, 2000)
 
     def update(self):
         self.image.set_alpha(0)

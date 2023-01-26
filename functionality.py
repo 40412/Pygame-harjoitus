@@ -92,7 +92,7 @@ def fireball_movement(fireball, width, height, speed, platfgroup, mario_group):
         speed[1] = -speed[1] # the y-direction of the speed will be converted
     
 def fb_collision(fireball, platfgroup, mario_group, speed):
-    if pygame.sprite.spritecollideany(fireball, platfgroup) or pygame.sprite.spritecollideany(fireball, mario_group):
+    if pygame.sprite.spritecollideany(fireball, platfgroup):
         boom.play()
         fireball.update()
         speed[0] = r.randint(-1,1)
@@ -100,10 +100,12 @@ def fb_collision(fireball, platfgroup, mario_group, speed):
 def koopa_hit(koopa, koopa_group, mario_group):
     if pygame.sprite.spritecollideany(koopa, mario_group):
         koopa.rect.centerx = 1000
+        mario_group.update()
     
 def spiny_hit(spiny, spiny_group, mario_group):
     if pygame.sprite.spritecollideany(spiny, mario_group):
         spiny.rect.centerx = 1000
+        mario_group.update()
 
 # Bullets kill parakoopa
 def kill_koopa(bullets, koopa, koopa_group):

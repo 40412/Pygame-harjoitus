@@ -51,7 +51,7 @@ pipe = ScreenObject.MovingSprite("Pipe.png", 850, height - 110)
 sidecollision_group.add(pipe)
 pipetop = ScreenObject.Platform(40, 150, 830, height- 150, transp)
 platfgroup.add(pipetop)
-qmark1top = ScreenObject.Platform(45, 5, 287, 360, transp)
+qmark1top = ScreenObject.Platform(40, 5, 290, 360, transp)
 platfgroup.add(qmark1top)
 qmark2top = ScreenObject.Platform(40, 5, 550, 190, transp)
 platfgroup.add(qmark2top)
@@ -129,9 +129,10 @@ while True:
                 pygame.quit() # the display window closes
                 sys.exit()    # the python program exits
     
-    if pygame.sprite.spritecollideany(fireball, mario_group) or pygame.sprite.spritecollideany(koopa, mario_group) or pygame.sprite.spritecollideany(spiny, mario_group):
+    if pygame.sprite.spritecollideany(fireball, mario_group):
         mario.update()
         update_hearts()
+        fireball.update()
 
     if mario.isalive == False:
         dispSurf.blit(gameovertext, (300, 250))
@@ -149,6 +150,7 @@ while True:
     score = score + kk + ks
     fun.koopa_hit(koopa, koopa_group, mario_group)
     fun.spiny_hit(spiny, spiny_group, mario_group)
+    update_hearts()
     
     pressings = pygame.key.get_pressed()
     fun.key_pressings(mario, controls, speedx, x_direct_right)
