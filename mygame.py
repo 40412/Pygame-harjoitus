@@ -109,6 +109,9 @@ finalscorefont = pygame.font.SysFont('arial', 80)
 boom = pygame.mixer.Sound("boom.wav")
 gunshot = pygame.mixer.Sound("shoot.wav")
 points_jingle = pygame.mixer.Sound("points.wav")
+music = pygame.mixer.music
+music.load("game_bgm.ogg")
+music.play(-1)
 
 # speed contains the [x,y]-speed of the fireball in pixels
 speed = [r.randint(0,1),1]
