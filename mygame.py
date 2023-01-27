@@ -6,6 +6,8 @@ from math import *
 
 pygame.init()  # initializes pygame
 
+import functionality as fun
+
 # the display surface
 width = 960
 height = 600
@@ -13,7 +15,7 @@ dispSurf = pygame.display.set_mode((width,height))
 pygame.display.set_caption("My game")
 
 # the Surface objects
-level = pygame.image.load("level.jpg").convert()
+level = pygame.image.load("level.png").convert()
 # pygame.image.load(file) function loads a picture "file" into a given variable
 # convert() method converts the picture into the right pixel-format
 # picture files needs to be in the same folder as this python file
@@ -37,11 +39,10 @@ moving_group = pygame.sprite.Group()
 headcollision_group = pygame.sprite.Group()
 sidecollision_group = pygame.sprite.Group()
 heart_group = pygame.sprite.Group()
+koopa_group = pygame.sprite.Group()
+spiny_group = pygame.sprite.Group()
 
-# Surface objects can be added to the display surface with blit() method
-# blit(Surface,(x,y)) adds "Surface" into coordinates (x,y)=(left, top)
-dispSurf.blit(level, (0,0))
-
+#Sprites
 rectangle = ScreenObject.Platform(width, 50, 0, 537, transp)
 platfgroup.add(rectangle)
 platform = ScreenObject.Platform(220, 5, 460, 365, transp)
@@ -50,7 +51,7 @@ pipe = ScreenObject.MovingSprite("Pipe.png", 850, height - 110)
 sidecollision_group.add(pipe)
 pipetop = ScreenObject.Platform(40, 150, 830, height- 150, transp)
 platfgroup.add(pipetop)
-qmark1top = ScreenObject.Platform(45, 5, 287, 360, transp)
+qmark1top = ScreenObject.Platform(40, 5, 290, 360, transp)
 platfgroup.add(qmark1top)
 qmark2top = ScreenObject.Platform(40, 5, 550, 190, transp)
 platfgroup.add(qmark2top)
@@ -72,7 +73,14 @@ sidecollision_group.add(qmarkbox2side)
 tilesside = ScreenObject.Platform(220, 25, 460, 370, transp)
 sidecollision_group.add(tilesside)
 crosshair = pygame.draw.circle(dispSurf, white, pygame.mouse.get_pos(), 3, 2)
-
+koopa = ScreenObject.MovingSprite('parakoopa.png', 0, 200)
+moving_group.add(koopa)
+koopa_group.add(koopa)
+spiny = ScreenObject.MovingSprite('spiny.png', 600, height - 90)
+moving_group.add(spiny)
+spiny_group.add(spiny)
+# If mario touches the fireball, he loses health.
+# This function empties the heart_group and checks the current health situation and updates the group
 def update_hearts():
     heart_group.empty()
     heartpos = 50
@@ -80,44 +88,36 @@ def update_hearts():
         heartpos += 50
         heart = ScreenObject.MovingSprite("heart.png", heartpos, 50)
         heart_group.add(heart)
-# the display surface needs to be updated for the blitted Surfaces to become visible
-# pygame.display.update() would do the same
-pygame.display.flip()
 
-# character physics
-def fall():
-    if not pygame.sprite.spritecollideany(mario, platfgroup) and not isJump:
-        mario.rect.top += 2
-
-def map_edges():
-    if mario.rect.centerx > width:
-        mario.rect.centerx = 0
-    if mario.rect.centerx < 0:
-        mario.rect.centerx = width
-
-def get_angle(point2, point1):
-        dx = point2[0] - point1[0]
-        dy = point2[1] - point1[1]
-        angle = atan2(dy, dx)
-        return angle
-        
+# game variables
+bullet_cooldown = 0
 isJump = False
-controls = False
+controls = True
 speedx = 2
 speedy = 10
 x_direct_right = False
 jumpmax = 25
+score = 0
+
 clock = pygame.time.Clock()
-boom = pygame.mixer.Sound("boom.wav")
 gameoverfont = pygame.font.SysFont('arial', 80)
 gameovertext = gameoverfont.render('GAME OVER', True, red)
+scorefont = pygame.font.SysFont('arial',24)
+finalscorefont = pygame.font.SysFont('arial', 80)
+
+
+boom = pygame.mixer.Sound("boom.wav")
+gunshot = pygame.mixer.Sound("shoot.wav")
+points_jingle = pygame.mixer.Sound("points.wav")
+music = pygame.mixer.music
+music.load("game_bgm.ogg")
+music.play(-1)
 
 # speed contains the [x,y]-speed of the fireball in pixels
 speed = [r.randint(0,1),1]
 
 update_hearts()
 pygame.mouse.set_visible(False)
-
 bullets = []
 
 # the game loop which runs until sys.exit()
@@ -131,44 +131,43 @@ while True:
             if event.key == K_ESCAPE: # if the key was esc
                 pygame.quit() # the display window closes
                 sys.exit()    # the python program exits
-    # fireball will be moved by speed=[1,1] in every iteration
-    # move_ip([x,y]) changes the Rect-objects left-top coordinates by x and y
-    fireball.rect.move_ip(speed)
-    # fireball bounces from the edges of the display surface
-    if fireball.rect.left < 0 or fireball.rect.right > width: # fireball is vertically outside the game
-        speed[0] = -speed[0] # the x-direction of the speed will be converted
-    if fireball.rect.top < 0 or fireball.rect.bottom > height: # fireball is horizontally outside the game
-        speed[1] = -speed[1] # the y-direction of the speed will be converted
-
+    
     if pygame.sprite.spritecollideany(fireball, mario_group):
         mario.update()
         update_hearts()
+        fireball.update()
 
     if mario.isalive == False:
         dispSurf.blit(gameovertext, (300, 250))
+        dispSurf.blit(finalscorefont.render('Score: ' + str(score), True, (240, 40, 40)), (300, 420))
         pygame.display.update()
         pygame.time.wait(5000)
         sys.exit()
 
-    # Fireball disappears after hitting the ground or platform
-    if pygame.sprite.spritecollideany(fireball, platfgroup) or pygame.sprite.spritecollideany(fireball, mario_group):
-        boom.play()
-        fireball.update()
-        speed[0] = r.randint(-1,1)
-
-    # get.pressed() function gives a boolean list of all the keys if they are being pressed
+    fun.fireball_movement(fireball, width, height, speed, platfgroup, mario_group)
+    fun.fb_collision(fireball, platfgroup, mario_group, speed)
+    koopa.koopa_move()
+    kk = fun.kill_koopa(bullets, koopa, koopa_group)
+    spiny.spiny_move(700)
+    ks = fun.kill_spiny(bullets, spiny, spiny_group)
+    score = score + kk + ks
+    fun.koopa_hit(koopa, koopa_group, mario_group)
+    fun.spiny_hit(spiny, spiny_group, mario_group)
+    update_hearts()
+    
     pressings = pygame.key.get_pressed()
-    if pressings[K_a] and controls:          # if left-key is true in the list
-        mario.rect.move_ip((-1 * speedx,0))  # mario will be moved one pixel left
-        x_direct_right = False
-    if pressings[K_d] and controls:
-        mario.rect.move_ip((speedx,0))
-        x_direct_right = True
+    fun.key_pressings(mario, controls, speedx, x_direct_right)
 
     #Shooting bullets if mousebutton is clicked
-    if event.type == MOUSEBUTTONDOWN:
-        bullet = ScreenObject.Bullet(mario.rect.center, get_angle(pygame.mouse.get_pos(), mario.rect.center))
+    if event.type == MOUSEBUTTONDOWN and bullet_cooldown == 0:
+        bullet_cooldown = 20
+        bullet = ScreenObject.Bullet(mario.rect.center, fun.get_angle(pygame.mouse.get_pos(), mario.rect.center), "bullet.png")
         bullets.append(bullet)
+        gunshot.play()
+    
+    #Bullet cooldown
+    if bullet_cooldown > 0:
+        bullet_cooldown = bullet_cooldown-1
       
     if isJump == False and pygame.sprite.spritecollideany(mario, platfgroup) and pressings[K_SPACE]:
         isJump = True
@@ -184,41 +183,28 @@ while True:
                 isJump = False
                 jumpmax = 25
         speedy = 10
+    fun.fall(mario, platfgroup, isJump)
+    fun.map_edges(mario, width)
+    fun.collisions(mario, sidecollision_group, controls, speedx, x_direct_right)
+    fun.pipejump(pipetop, mario_group, mario, pipe, height, controls)
 
-    fall()
-    map_edges()
-
-    if pygame.sprite.spritecollideany(mario, sidecollision_group):
-        speedx = 0
-        if x_direct_right == True:
-            mario.rect.move_ip(-5,0)
-        if x_direct_right == False:
-            mario.rect.move_ip(5,0)
-    else:
-        speedx = 2
-
-    #if mario touches the top of the pipe, he jumps inside it
-    if pygame.sprite.spritecollideany(pipetop, mario_group):
-        controls = False
-        mario.rect.centerx = pipe.rect.centerx
-        mario.rect.top += 1
-        if mario.rect.center[1] > height-110:
-            mario.rect.center = 100, 0
-    else: controls = True
-
-    # blit all the Surfaces in their new places
+    # Draw all the Surfaces
     dispSurf.blit(level, (0,0)) # without this, moving characters would have a "trace"
-    for bullet in bullets:
+
+    for i, bullet in enumerate(bullets): # Update bullets
         bullet.draw_bullet(dispSurf)
         bullet.update()
+        if bullet.residual == True: # Kill off-screen bullets
+            bullets.pop(i)
+    
     moving_group.draw(dispSurf)
-    #bullet_group.draw(dispSurf)
-    #bullet_group.update()
     mario_group.draw(dispSurf)
     platfgroup.draw(dispSurf)
     headcollision_group.draw(dispSurf)
     sidecollision_group.draw(dispSurf)
     heart_group.draw(dispSurf)
+    scorewidth, scoreheight = scorefont.size("Score: " + str(score))
+    dispSurf.blit(scorefont.render("Score: " + str(score), True, blue), (width - scorewidth - 10, 32))
     pygame.draw.circle(dispSurf, white, pygame.mouse.get_pos(), 10, 2)
 
     clock.tick(250)
