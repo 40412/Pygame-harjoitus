@@ -2,6 +2,7 @@ import ScreenObject, sys, pygame
 from pygame.locals import *
 from math import *
 import random as r
+import pygame_menu
 
 points_jingle = None
 boom = None
@@ -14,7 +15,7 @@ def fall(mario, platfgroup, isJump):
     if not pygame.sprite.spritecollideany(mario, platfgroup) and not isJump:
         mario.rect.top += 2
 
-def jump(mario, headcollision_group, platfgroup): #not working!
+def jump(mario, headcollision_group, platfgroup): 
     isJump = False
     jumpmax = 25
     speedy = 10

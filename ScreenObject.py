@@ -18,7 +18,7 @@ class Mario(pygame.sprite.Sprite):
         self.image = pygame.image.load(picture_path)
         self.rect = self.image.get_rect()
         self.rect.center = 100, 250
-        self.health = 3
+        self.health = 6
         self.isalive = True
 
     def update(self):
@@ -27,6 +27,12 @@ class Mario(pygame.sprite.Sprite):
             self.image.set_alpha(50)
         if self.health == 0:
             self.isalive = False
+
+    def reset(self):
+        self.health = 6
+        self.isalive = True
+        self.rect.center = 100, 250
+        self.image.set_alpha(255)
 
 class MovingSprite(pygame.sprite.Sprite):
     def __init__(self, picture_path, x_pos, y_pos):
