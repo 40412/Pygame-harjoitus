@@ -2,7 +2,8 @@ import pygame, ScreenObject, sys
 from pygame.locals import * # imports the constants of pygame
 from ScreenObject import *
 import random as r
-import pygame_menu
+import pygame_menu  # For this to work, you need to install pygame_menu
+                    # Run in console: pip install pygame-menu -U 
 
 pygame.init()  # initializes pygame
 
@@ -15,6 +16,7 @@ dispSurf = pygame.display.set_mode((width,height))
 pygame.display.set_caption("My game")
 
 # the Surface objects
+global level
 level = pygame.image.load("level.png").convert()
 # pygame.image.load(file) function loads a picture "file" into a given variable
 # convert() method converts the picture into the right pixel-format
@@ -121,6 +123,19 @@ pygame.mouse.set_visible(False)
 bullets = []
 
 #menu functions
+def set_Character(first, second):
+    if charselect.get_value()[1] == 1:
+        mario.image = pygame.image.load('player.png')
+    else:
+        mario.image = pygame.image.load('marioAlpha.png')
+
+def set_level(args, arg):
+    global level
+    if levelselect.get_value()[1] == 0:
+        level = pygame.image.load('level.png').convert()
+    else:
+        level = pygame.image.load('level2.png').convert()
+
 def quit_game():
     pygame.QUIT
     sys.exit()
@@ -168,11 +183,6 @@ def start_game():
                 bullet = ScreenObject.Bullet(mario.rect.center, fun.get_angle(pygame.mouse.get_pos(), mario.rect.center), "bullet.png")
                 bullets.append(bullet)
                 gunshot.play()
-    
-        if pygame.sprite.spritecollideany(fireball, mario_group):
-            mario.update()
-            update_hearts()
-            fireball.update()
 
         if mario.isalive == False:
             dispSurf.blit(gameovertext, (300, 250))
@@ -191,6 +201,7 @@ def start_game():
         score = score + kk + ks
         fun.koopa_hit(koopa, koopa_group, mario_group)
         fun.spiny_hit(spiny, spiny_group, mario_group)
+        fun.fireball_hit(fireball, mario_group)
         update_hearts()
     
         pressings = pygame.key.get_pressed()
@@ -200,6 +211,7 @@ def start_game():
         if bullet_cooldown > 0:
             bullet_cooldown = bullet_cooldown-1
       
+        # Jumping
         if isJump == False and pygame.sprite.spritecollideany(mario, platfgroup) and pressings[K_SPACE]:
             isJump = True
 
@@ -241,8 +253,13 @@ def start_game():
         clock.tick(250)
         # updating the display surface is always needed at the end of each iteration of game loop
         pygame.display.flip()
-     
+
+# Main menu   
 menu = pygame_menu.Menu('Menu', 500,500, theme=pygame_menu.themes.THEME_BLUE)
-start_button = menu.add.button('Start Game', start_game)
+menu.add.button('Start Game', start_game)
+charselect = menu.add.selector('Change character :', [('Mario', 1), ('Sonic', 2)], onchange=set_Character)
+levelselect = menu.add.selector('Change level :', [('Level 1', 1), ('Level2', 2)], onchange=set_level)
 menu.add.button('Quit', quit_game)
+cntrls = ["Move left: a", "Move right: d", "Jump: SPACE", "Shoot bullets: Mouse click"]
+menu.add.label(cntrls, 'Controls', 0, None, False, True)
 menu.mainloop(dispSurf)

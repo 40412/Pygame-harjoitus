@@ -108,6 +108,11 @@ def spiny_hit(spiny, spiny_group, mario_group):
         spiny.rect.centerx = 1000
         mario_group.update()
 
+def fireball_hit(fireball, mario_group):
+    if pygame.sprite.spritecollideany(fireball, mario_group):
+        mario_group.update()
+        fireball.update()
+
 # Bullets kill parakoopa
 def kill_koopa(bullets, koopa, koopa_group):
     for bullet in bullets:
